@@ -79,20 +79,7 @@ export const getSpecificCategory = async (req, res, next) => {
   res.status(200).json({ messages: "categories is...", categories });
 };
 
-/**
- * Api {GET} get all categories with populate and paginate
- */
 
-export const getAllCategories = async (req, res, next) => {
-  const { page = 1, limit = 5 } = req.query;
-  const skip = (page - 1) * limit;
-  const categories = await Category.find()
-    .populate("subcategory")
-    .limit(limit)
-    .skip(skip);
-
-  res.status(200).json({ categories });
-};
 
 /**
  * Api {put}  /categories/update/: update category
