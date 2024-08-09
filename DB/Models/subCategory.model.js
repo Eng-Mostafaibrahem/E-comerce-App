@@ -48,5 +48,19 @@ const subCategorySchema = new Schema(
   { timestamps: true }
 );
 
+
+subCategorySchema.virtual('Brand', {
+  ref: 'Brands', //model to use
+  localField: '_id', //filed in base model
+  foreignField: 'subCategoryId',// field related in another model
+  
+ 
+});
+
+subCategorySchema.set("toJSON",{virtuals: true});
+subCategorySchema.set("toObject",{virtuals: true});
+
+
+
 export const subCategory =
   mongoose.models.subCategory || model("subCategory", subCategorySchema);

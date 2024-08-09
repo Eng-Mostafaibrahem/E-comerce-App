@@ -4,6 +4,7 @@ import slugify from "slugify";
 import { subCategory } from "../../../DB/Models/subCategory.model.js";
 import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
 import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
+import { errorHandler } from "../../Middlewares/error-handl.middleware.js";
 
 /**
  * Api {POST} subcategories/add   add subcategory
@@ -56,10 +57,10 @@ export const createSubCategory = async (req, res, next) => {
 };
 
 /**
- * API {Get} /subcategory/specific  Get all sub categories
+ * API {Get} /subcategory/specific  Get specific sub categories
  */
 
-export const getAllSubCategories = async (req, res, next) => {
+export const getSpecificSubCategories = async (req, res, next) => {
   const { name, _id, slug } = req.params;
 
   const filterQuery = {};
@@ -83,6 +84,25 @@ export const getAllSubCategories = async (req, res, next) => {
     subcategories,
   });
 };
+
+
+/**
+ * Api {GET} ALL subcategories with paginated and brands
+ */
+
+export const getAllSubCategories = async (req, res, next) => {
+  const { page , limit =5 } = req.query;
+  const skip = (page - 1) * limit
+  const subcategories = await subCategory.find()
+   .populate("Brand")
+   .limit(limit)
+   .skip(skip);
+   if(subcategories.length===0){
+    return next(new ErrorHandleClass("don't have data any more",400,"don't have data any more"))
+   }
+
+   res.status(200).json({message:"subcategories", data:subcategories})
+}
 
 /**
  * Api {Put} /subCategory/update/_id upate data and image on host
