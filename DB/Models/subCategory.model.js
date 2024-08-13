@@ -53,8 +53,6 @@ subCategorySchema.virtual('Brand', {
   ref: 'Brands', //model to use
   localField: '_id', //filed in base model
   foreignField: 'subCategoryId',// field related in another model
-  
- 
 });
 
 subCategorySchema.set("toJSON",{virtuals: true});

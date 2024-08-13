@@ -1,10 +1,15 @@
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 
-import { subCategory } from "../../../DB/Models/subCategory.model.js";
-import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
-import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
-import { errorHandler } from "../../Middlewares/error-handl.middleware.js";
+// import { subCategory } from "../../../DB/Models/subCategory.model.js";
+// import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
+// import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
+// import { errorHandler } from "../../Middlewares/error-handl.middleware.js";
+// import { Category } from "../../../DB/Models/Category.model.js";
+
+import * as Utils from "../../Utils/index.js"
+import * as DB from "../../../DB/Models/index.js";
+
 
 /**
  * Api {POST} subcategories/add   add subcategory
@@ -13,8 +18,8 @@ import { errorHandler } from "../../Middlewares/error-handl.middleware.js";
 export const createSubCategory = async (req, res, next) => {
   //get data from user
   const { name, categoryId } = req.body;
-  const category = await subCategory.findById(categoryId);
-  if(!category) next(new ErrorHandleClass("category not found",404,"category not found"))
+  const category = await DB.Category.findById(categoryId);
+  if(!category) next(new Utils.ErrorHandleClass("category not found",404,"category not found"))
 
   //generate slug
   const slug = slugify(name, {
@@ -28,7 +33,7 @@ export const createSubCategory = async (req, res, next) => {
   //upload image
   if (!req.file) {
     next(
-      new ErrorHandleClass("please upload image", 400, "please upload image")
+      new Utils.ErrorHandleClass("please upload image", 400, "please upload image")
     );
   }
   const { secure_url, public_id } = await uploadFile({
@@ -37,7 +42,7 @@ export const createSubCategory = async (req, res, next) => {
 
   });
 
-  const document = new subCategory({
+  const document = new DB.subCategory({
     name,
     slug,
     categoryId,
@@ -48,7 +53,7 @@ export const createSubCategory = async (req, res, next) => {
     customId,
   });
 
-  const newSubCategory = await subCategory.create(document);
+  const newSubCategory = await DB.subCategory.create(document);
 
   res.status(200).json({
     message: "sub category created successfully",
@@ -69,10 +74,10 @@ export const getSpecificSubCategories = async (req, res, next) => {
   if (name) filterQuery.name = name;
   if (slug) filterQuery.slug = slug;
 
-  const subcategories = await subCategory.findOne(filterQuery);
+  const subcategories = await DB.subCategory.findOne(filterQuery);
   if (!subcategories)
     return next(
-      new ErrorHandleClass(
+      new Utils.ErrorHandleClass(
         "subCategory not found",
         404,
         "subCategory not found"
@@ -93,12 +98,12 @@ export const getSpecificSubCategories = async (req, res, next) => {
 export const getAllSubCategories = async (req, res, next) => {
   const { page , limit =5 } = req.query;
   const skip = (page - 1) * limit
-  const subcategories = await subCategory.find()
+  const subcategories = await DB.subCategory.find()
    .populate("Brand")
    .limit(limit)
    .skip(skip);
    if(subcategories.length===0){
-    return next(new ErrorHandleClass("don't have data any more",400,"don't have data any more"))
+    return next(new Utils.ErrorHandleClass("don't have data any more",400,"don't have data any more"))
    }
 
    res.status(200).json({message:"subcategories", data:subcategories})
@@ -112,12 +117,12 @@ export const updateSubCategory = async (req, res, next) => {
   const { _id } = req.params;
 
   //find subcategory in db
-  const subcategory = await subCategory.findById(_id);
+  const subcategory = await DB.subCategory.findById(_id);
 
   // check if category in db or not
   if (!subcategory)
     return next(
-      new ErrorHandleClass(
+      new Utils.ErrorHandleClass(
         "subcategory not found",
         404,
         "subcategory not found"
@@ -145,9 +150,11 @@ export const updateSubCategory = async (req, res, next) => {
     const splitedPublicId = subcategory.Images.public_id.split(
       `${subcategory.customId}/`
     )[1];
-    const { secure_url } = await uploadFile({
+    const { secure_url } = await Utils.uploadFile({
       file: req.file.path,
-      folder: `${process.env.UPLOADS_FOLDER}/Categories/${category.customId}/SubCategories/${customId}`,
+      //SINGLE OF TRUTHE
+      folder: `${process.env.UPLOADS_FOLDER}/Categories/${subcategory.categoryId.customId}/SubCategories/${customId}`,
+      
       publicId: splitedPublicId,
     });
 
@@ -167,12 +174,12 @@ export const updateSubCategory = async (req, res, next) => {
 
 export const deleteSubCategory = async (req, res, next) => {
   const { _id } = req.params;
-  const subcategory = await subCategory.findByIdAndDelete(_id);
+  const subcategory = await DB.subCategory.findByIdAndDelete(_id);
   if (!subcategory)
-    return next(new ErrorHandleClass("not found", 404, "not found"));
+    return next(new Utils.ErrorHandleClass("not found", 404, "not found"));
   //delet image from host
-  const subcategoryPath = `${process.env.UPLOADS_FOLDER}/Categories/${category.customId}/SubCategories/${customId}`;
-  await cloudinaryConfig().api.delete_resources_by_prefix(subcategoryPath);
-  await cloudinaryConfig().api.delete_folder(subcategoryPath);
+  const subcategoryPath = `${process.env.UPLOADS_FOLDER}/Categories/${subcategory.categoryId.customId}/SubCategories/${customId}`;
+  await Utils.cloudinaryConfig().api.delete_resources_by_prefix(subcategoryPath);
+  await Utils.cloudinaryConfig().api.delete_folder(subcategoryPath);
   res.status(200).json({ message: "subcategory deleted successfully" });
 };
