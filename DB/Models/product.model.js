@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import slugify from "slugify";
+import { Badges, discountType } from "../../SRC/Utils/index.js";
+import { calcProductPrice } from "../../SRC/Utils/calc-productPrice.utils.js";
+import mongoosePaginate from "mongoose-paginate-v2"
 
 const { Schema, model } = mongoose;
 
@@ -15,13 +19,16 @@ const productSchema = new Schema(
       type: String,
       required: true,
       lowercase: true,
+      default: function () {
+        return slugify(this.title, { lower: true, replacment: "_" });
+      },
     },
 
     overview: String,
-    specs: object, // can be Map of key/value pairs but is dificult in validate with third party modules
+    // specs: object, // can be Map of key/value pairs but is dificult in validate with third party modules
     badges: {
       type: String,
-      enum: ["New", "Sale", "Best Seller"],
+      enum: Object.values(Badges),
     },
 
     //number section
@@ -46,13 +53,16 @@ const productSchema = new Schema(
       },
       type: {
         type: String,
-        enum: ["Percentage", "Fixed"],
-        default: "Percentage",
+        enum: Object.values(discountType),
+        default: discountType.PERCENTAGE,
       },
     },
     appliedPrice: {
       type: Number, //price - appliedDiscount
       required: true,
+      default: function () {
+        return calcProductPrice(this.price, this.appliedDiscount);
+      },
     },
 
     stock: {
@@ -68,14 +78,16 @@ const productSchema = new Schema(
     },
 
     //   /Images
-    images: [{
-      URLs: {},
-      customId: {
-        type: String,
-        required: true,
-        unique: true,
+    images: [
+      {
+        URLs: {},
+        customId: {
+          type: String,
+          required: true,
+          unique: true,
+        },
       },
-    }],
+    ],
 
     //  id sections
     categoryId: {
@@ -89,7 +101,7 @@ const productSchema = new Schema(
       required: true,
     },
 
-    brand: {
+    brandId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brands",
       required: true,
@@ -99,5 +111,6 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
+productSchema.plugin(mongoosePaginate)
 export const Product =
   mongoose.models.Product || model("Product", productSchema);
