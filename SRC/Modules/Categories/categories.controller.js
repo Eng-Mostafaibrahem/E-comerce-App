@@ -4,8 +4,6 @@ import { nanoid } from "nanoid";
 import { Category } from "../../../DB/Models/Category.model.js";
 import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
 import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
-import { subCategory } from "../../../DB/Models/subCategory.model.js";
-// import { subCategory } from './../../../DB/Models/subCategory.model';
 
 /**
  * @api {POST}/category/create /add category
@@ -78,6 +76,24 @@ export const getSpecificCategory = async (req, res, next) => {
   }
   res.status(200).json({ messages: "categories is...", categories });
 };
+
+
+
+/**
+ * API {Get} get all categories with pagination 
+ */
+
+
+export const getAllCategories = async (req, res, next) => {
+  const { page , limit =5 } = req.query;
+  const skip = (page - 1) * limit
+  const categories = await Category.find()
+   .populate("subcategory")
+   .limit(limit)
+   .skip(skip);
+
+   res.status(200).json({message:"categories", data:categories})
+}
 
 
 
