@@ -17,6 +17,11 @@ subCategoryRouter.post(
 
 subCategoryRouter.get(
   "/specific",
+  errorHandler(controller.getSpecificSubCategories)
+);
+
+subCategoryRouter.get(
+  "/all",
   errorHandler(controller.getAllSubCategories)
 );
 
