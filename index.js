@@ -4,9 +4,13 @@ import { db_connection } from "./DB/db-Connection.js";
 import { globalResponse } from "./SRC/Middlewares/error-handl.middleware.js";
 
 // routers
-import { categoryRouter } from "./SRC/Modules/Categories/categories.routes.js";
-import { subCategoryRouter } from "./SRC/Modules/subCategory/subCategory.routes.js";
-import { brandRouter } from "./SRC/Modules/Brands/Brand.routes.js";
+// import { categoryRouter } from "./SRC/Modules/Categories/categories.routes.js";
+// import { subCategoryRouter } from "./SRC/Modules/subCategory/subCategory.routes.js";
+// import { brandRouter } from "./SRC/Modules/Brands/Brand.routes.js";
+
+import * as router from "./SRC/Modules/index.js";
+
+
 
 
 import { config } from "dotenv";
@@ -23,9 +27,15 @@ config();
 const app = express();
 let port = process.env.PORT;
 app.use(express.json());
-app.use("/categories", categoryRouter);
-app.use("/subcategory",subCategoryRouter);
-app.use("/brand",brandRouter);
+// app.use("/categories", categoryRouter);
+app.use("/categories",router.categoryRouter);
+
+// app.use("/subcategory",subCategoryRouter);
+app.use("/subcategory",router.subCategoryRouter);
+
+// app.use("/brand",brandRouter);
+app.use("/brand",router.brandRouter);
+
 
 
 app.use(globalResponse);

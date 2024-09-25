@@ -60,7 +60,7 @@ const productSchema = new Schema(
       required: true,
       min: 3,
     },
-    ratring: {
+    rating: {
       type: Number,
       min: 0,
       max: 5,

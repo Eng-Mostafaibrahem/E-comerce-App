@@ -45,11 +45,22 @@ const brandSchema = new Schema(
     },
     subCategoryId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "SubCategory",
+      ref: "subCategory",
       required: true,
     },
   },
   { timestamps: true }
 );
+
+// brandSchema.virtual('product', {
+//   ref: 'product', //model to use
+//   localField: '_id', //filed in base model
+//   foreignField: 'productId',// field related in another model
+// });
+
+// brandSchema.set("toJSON",{virtuals: true});
+// brandSchema.set("toObject",{virtuals: true});
+
+
 
 export const Brands = mongoose.models.Brands || model("Brands", brandSchema);

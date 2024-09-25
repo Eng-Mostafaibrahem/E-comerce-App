@@ -1,9 +1,13 @@
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
-import { Category } from "../../../DB/Models/Category.model.js";
-import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
-import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
+// import { Category } from "../../../DB/Models/Category.model.js";
+// import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
+// import { cloudinaryConfig, uploadFile } from "../../Utils/cloudinary.utils.js";
+import * as Utils from "../../Utils/index.js"
+import * as DB from "../../../DB/Models/index.js";
+
+
 
 /**
  * @api {POST}/category/create /add category
@@ -24,7 +28,7 @@ export const createCategory = async (req, res, next) => {
 
   if (!req.file) {
     return next(
-      new ErrorHandleClass("please upload image", 400, "please upload image")
+      new Utils.ErrorHandleClass("please upload image", 400, "please upload image")
     );
   }
 
@@ -32,7 +36,7 @@ export const createCategory = async (req, res, next) => {
 
   // to create specific folder on host in folder category to structure specific herarcy
   const customId = nanoid(4);
-  const { secure_url, public_id } = await cloudinaryConfig().uploader.upload(
+  const { secure_url, public_id } = await Utils.cloudinaryConfig().uploader.upload(
     req.file.path,
 
     {
@@ -41,7 +45,7 @@ export const createCategory = async (req, res, next) => {
   );
 
   //create a new category
-  const category = new Category({
+  const category = new DB.Category({
     name,
     slug,
     Images: {
@@ -50,7 +54,7 @@ export const createCategory = async (req, res, next) => {
     },
     customId,
   });
-  const newCategory = await Category.create(category);
+  const newCategory = await DB.Category.create(category);
   res.status(201).json({
     message: "category created successfully",
     category: newCategory,
@@ -69,10 +73,10 @@ export const getSpecificCategory = async (req, res, next) => {
   if (name) filterQuery.name = name;
   if (slug) filterQuery.slug = slug;
 
-  const categories = await Category.findOne(filterQuery);
+  const categories = await DB.Category.findOne(filterQuery);
 
   if (!categories) {
-    return next(new ErrorHandleClass("No categories found", 404, "Not found"));
+    return next(new Utils.ErrorHandleClass("No categories found", 404, "Not found"));
   }
   res.status(200).json({ messages: "categories is...", categories });
 };
@@ -87,7 +91,7 @@ export const getSpecificCategory = async (req, res, next) => {
 export const getAllCategories = async (req, res, next) => {
   const { page , limit =5 } = req.query;
   const skip = (page - 1) * limit
-  const categories = await Category.find()
+  const categories = await DB.Category.find()
    .populate("subcategory")
    .limit(limit)
    .skip(skip);
@@ -105,7 +109,7 @@ export const updateCategory = async (req, res, next) => {
   // get the category id
   const { _id } = req.params;
   // find the category by id
-  const category = await Category.findById(_id);
+  const category = await DB.Category.findById(_id);
   if (!category) {
     return next(
       new ErrorHandleClass("Category not found", 404, "Category not found")
@@ -130,7 +134,7 @@ export const updateCategory = async (req, res, next) => {
       `${category.customId}/`
     )[1];
 
-    const { secure_url } = await uploadFile({
+    const { secure_url } = await Utils.uploadFile({
       file: req.file.path,
       folder: `${process.env.UPLOADS_FOLDER}/Categories/${category.customId}`,
       publicId: splitedPublicId,
@@ -155,17 +159,17 @@ export const deleteCategory = async (req, res, next) => {
   // get the category id
   const { _id } = req.params;
   // find the category by id
-  const category = await Category.findByIdAndDelete(_id);
+  const category = await DB.Category.findByIdAndDelete(_id);
   if (!category) {
     return next(
-      new ErrorHandleClass("Category not found", 404, "Category not found")
+      new Utils.ErrorHandleClass("Category not found", 404, "Category not found")
     );
   }
 
   //delete image from host
   const categoryPath = `${process.env.UPLOADS_FOLDER}/Categories/${category.customId}`;
-  await cloudinaryConfig().api.delete_resources_by_prefix(categoryPath);
-  await cloudinaryConfig().api.delete_folder(categoryPath);
+  await Utils.cloudinaryConfig().api.delete_resources_by_prefix(categoryPath);
+  await Utils.cloudinaryConfig().api.delete_folder(categoryPath);
 
   res.status(200).json({ message: "Category deleted successfully" });
 };
