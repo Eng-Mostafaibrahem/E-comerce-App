@@ -1,10 +1,21 @@
-import { User } from "../../../DB/Models/User.model.js";
+import { User, Adresses } from "../../../DB/Models/index.js";
 import { ErrorHandleClass } from "../../Utils/error-Class.utils.js";
-import { compareSync, hashSync } from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 export const Register = async (req, res, next) => {
   //destruct data from user
-  const { name, email, password, gender, role } = req.body;
+  const {
+    name,
+    email,
+    password,
+    gender,
+    role,
+    country,
+    city,
+    floorNumber,
+    buildingNumber,
+    postalCode,
+  } = req.body;
   //check if user already exists
   const isEmailExist = await User.findOne({ email });
   if (isEmailExist)
@@ -13,7 +24,7 @@ export const Register = async (req, res, next) => {
     );
 
   //hash pawword
-  const cipher = hashSync(password, 10);
+  const cipher = bcrypt.hashSync(password, 10);
   //create instance new user value
   const newUser = new User({
     name,
@@ -22,12 +33,26 @@ export const Register = async (req, res, next) => {
     gender,
     role,
   });
+  const user = await newUser.save();
 
-  const user = await User.create(newUser);
+  //   create address
+
+ 
+  const newAddress = new Adresses({
+    country,
+    city,
+    floorNumber,    
+    buildingNumber,
+    postalCode,
+    userId: user._id,
+  });
+
+  const address = await newAddress.save();
+
   return res.status(200).json({
     status: "success",
     message: "User created successfully",
-    data: user,
+    data: user , address,
   });
 };
 
@@ -35,14 +60,14 @@ export const login = async (req, res, next) => {
   //destruct data from req
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-//   COMPAR EMAIL 
+  //   COMPAR EMAIL
   if (!user)
     return next(
       new ErrorHandleClass("Invalid Credintial", 400, "Invalid Credintial")
     );
 
-    // COMPARE PASSWORD
-  const isPasswordMatch = compareSync(password, user.password);
+  // COMPARE PASSWORD
+  const isPasswordMatch = bcrypt.compareSync(password, user.password);
   if (!isPasswordMatch)
     return next(
       new ErrorHandleClass("Invalid Credintial", 400, "Invalid Credintial")
@@ -59,4 +84,3 @@ export const login = async (req, res, next) => {
   );
   res.status(200).json({ message: "Login Successful", token });
 };
-

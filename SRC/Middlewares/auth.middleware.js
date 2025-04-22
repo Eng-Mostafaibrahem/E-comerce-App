@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../../DB/Models/User.model.js";
+import {User} from "../../DB/Models/User.model.js";
 import { ErrorHandleClass } from "../Utils/error-Class.utils.js";
 
 /*destruct token 
