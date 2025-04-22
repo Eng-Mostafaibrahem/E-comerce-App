@@ -25,6 +25,9 @@ app.use("/categories", router.categoryRouter);
 app.use("/subcategory", router.subCategoryRouter);
 app.use("/brand", router.brandRouter);
 app.use("/product", router.productRouter);
+app.use("/address",router.addressRouter);
+app.use("/cart", router.cartRouter);
+
 
 app.use(globalResponse);
 
